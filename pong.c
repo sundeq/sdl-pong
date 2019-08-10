@@ -15,6 +15,8 @@ GameObject *initGameObject(int x, int y, int w, int h);
 void freeGameObject(GameObject *paddle);
 GameObject *setColor(GameObject *go, int r, int g, int b, int alpha);
 void render(SDL_Renderer *renderer, GameObject *leftPaddle, GameObject *rightPaddle, GameObject *background, GameObject *ball);
+int collidesWithTop(GameObject *go);
+int collidesWithBottom(int windowHeight, GameObject *go);
 
 int main() {
 
@@ -38,12 +40,14 @@ int main() {
 	int paddleHeight = 150;
 	int ballSide = 10;
 	int sideOffset = 100;
+
 	GameObject *leftPaddle = initGameObject(
 			sideOffset,
 			(windowHeight / 2) - (paddleHeight / 2),
 			paddleWidth,
 			paddleHeight);
 	leftPaddle = setColor(leftPaddle, 255, 255, 255, 255);
+	int leftPaddleDY;
 	
 	GameObject *rightPaddle = initGameObject(
 			windowWidth-sideOffset,
@@ -51,7 +55,6 @@ int main() {
 			paddleWidth,
 			paddleHeight);
 	rightPaddle = setColor(rightPaddle, 255, 255, 255, 255);
-	int leftPaddleDY;
 	int rightPaddleDY;
 
 	GameObject *ball = initGameObject(
@@ -60,6 +63,9 @@ int main() {
 			ballSide,
 			ballSide);
 	ball = setColor(ball, 255, 255, 255, 255);
+	int ballSpeed;
+	int ballDX;
+	int ballDY;
 	
 	SDL_Event sdlEvent;
 
@@ -96,6 +102,22 @@ int main() {
 			}
 		}
 
+		if (collidesWithTop(leftPaddle) && leftPaddleDY == -1) {
+			leftPaddleDY = 0;
+		}
+		
+		if (collidesWithBottom(windowHeight, leftPaddle) && leftPaddleDY == 1) {
+			leftPaddleDY = 0;
+		}
+		
+		if (collidesWithTop(rightPaddle) && rightPaddleDY == -1) {
+			rightPaddleDY = 0;
+		}
+		
+		if (collidesWithBottom(windowHeight, rightPaddle) && rightPaddleDY == 1) {
+			rightPaddleDY = 0;
+		}
+		
 		leftPaddle->rect->y += leftPaddleDY;
 		rightPaddle->rect->y += rightPaddleDY;
 		render(renderer, leftPaddle, rightPaddle, background, ball);
@@ -167,3 +189,10 @@ void render(SDL_Renderer *renderer, GameObject *leftPaddle, GameObject *rightPad
 	SDL_RenderPresent(renderer);
 }
 
+int collidesWithTop(GameObject *go) {
+	return go->rect->y == 1;	
+}
+
+int collidesWithBottom(int windowHeight, GameObject *go) {
+	return go->rect->y + go->rect->h == windowHeight-1;
+}
