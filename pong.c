@@ -1,5 +1,7 @@
-#include <SDL2/SDL.h>
 #include <math.h>
+#include <time.h>
+
+#include <SDL2/SDL.h>
 
 typedef struct GameObject GameObject;
 
@@ -17,7 +19,9 @@ GameObject *setColor(GameObject *go, int r, int g, int b, int alpha);
 void render(SDL_Renderer *renderer, GameObject *leftPaddle, GameObject *rightPaddle, GameObject *background, GameObject *ball);
 int collidesWithTop(GameObject *go);
 int collidesWithBottom(int windowHeight, GameObject *go);
-int gameObjectCollision(GameObject *g1, GameObject *g2);
+int leftPaddleFrontCollision(GameObject *ball, GameObject *leftPaddle);
+int rightPaddleFrontCollision(GameObject *ball, GameObject *rightPaddle);
+int ballYSpeedChange(GameObject *ball, GameObject *paddle);
 
 int main() {
 
@@ -64,9 +68,8 @@ int main() {
 			ballSide,
 			ballSide);
 	ball = setColor(ball, 255, 255, 255, 255);
-	int ballSpeed;
-	int ballDX;
-	int ballDY;
+	int ballXSpeed = rand() % 2 ? 1 : -1;
+	int ballYSpeed = 0;
 	
 	SDL_Event sdlEvent;
 
@@ -119,13 +122,29 @@ int main() {
 			rightPaddleDY = 0;
 		}
 		
-		ball->rect->x += 1;
+		if (collidesWithTop(ball)) {
+			ballYSpeed = -ballYSpeed;
+		}
+		
+		if (collidesWithBottom(windowHeight, ball)) {
+			ballYSpeed = -ballYSpeed;
+		}
+	
+		if (leftPaddleFrontCollision(ball, leftPaddle)) {
+			ballXSpeed = -ballXSpeed;
+			ballYSpeed += ballYSpeedChange(ball, leftPaddle);
+		}	
+		
+		if (rightPaddleFrontCollision(ball, rightPaddle)) {
+			ballXSpeed = -ballXSpeed;
+			ballYSpeed += ballYSpeedChange(ball, leftPaddle);
+		}	
+		
+		ball->rect->x += ballXSpeed;
+		ball->rect->y += ballYSpeed;
 		leftPaddle->rect->y += leftPaddleDY;
 		rightPaddle->rect->y += rightPaddleDY;
 
-		if (gameObjectCollision(ball, rightPaddle)) {
-			runGame = 0;
-		}
 		render(renderer, leftPaddle, rightPaddle, background, ball);
 	}
 
@@ -203,17 +222,24 @@ int collidesWithBottom(int windowHeight, GameObject *go) {
 	return go->rect->y + go->rect->h == windowHeight-1;
 }
 
-int gameObjectCollision(GameObject *g1, GameObject *g2) {
-	int g1LeftEdge = g1->rect->x;
-	int g2LeftEdge = g2->rect->x;
-	int g1RightEdge = g1->rect->x + g1->rect->w;
-	int g2RightEdge = g2->rect->x + g2->rect->w;
-	int g1Top = g1->rect->y;
-	int g2Top = g2->rect->y;
-	int g1Bottom = g1->rect->y + g1->rect->h;
-	int g2Bottom = g2->rect->y + g2->rect->h;
-	return g1LeftEdge < g2RightEdge &&
-	       g1RightEdge > g2LeftEdge &&
-	       g1Top < g2Bottom &&
-	       g1Bottom > g2Top;
+int leftPaddleFrontCollision(GameObject *ball, GameObject *leftPaddle) {
+	int frontHit = ball->rect->x == leftPaddle->rect->x + leftPaddle->rect->w;
+	int inYBounds = ball->rect->y > leftPaddle->rect->y &&
+		ball->rect->y + ball->rect->w < leftPaddle->rect->y + leftPaddle->rect->h;
+	return frontHit && inYBounds;
+}
+
+int rightPaddleFrontCollision(GameObject *ball, GameObject *rightPaddle) {
+	int frontHit = ball->rect->x + ball->rect->w == rightPaddle->rect->x;
+	int inYBounds = ball->rect->y > rightPaddle->rect->y &&
+		ball->rect->y + ball->rect->w < rightPaddle->rect->y + rightPaddle->rect->h;
+	return frontHit && inYBounds;
+}
+
+int ballYSpeedChange(GameObject *ball, GameObject *paddle) {
+	if (ball->rect->y > paddle->rect->y && ball->rect->y + ball->rect->w < paddle->rect->y + paddle->rect->w) {
+		return 1;
+	} else {
+		return -1;
+	}
 }
