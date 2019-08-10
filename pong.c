@@ -17,6 +17,7 @@ GameObject *setColor(GameObject *go, int r, int g, int b, int alpha);
 void render(SDL_Renderer *renderer, GameObject *leftPaddle, GameObject *rightPaddle, GameObject *background, GameObject *ball);
 int collidesWithTop(GameObject *go);
 int collidesWithBottom(int windowHeight, GameObject *go);
+int gameObjectCollision(GameObject *g1, GameObject *g2);
 
 int main() {
 
@@ -118,8 +119,13 @@ int main() {
 			rightPaddleDY = 0;
 		}
 		
+		ball->rect->x += 1;
 		leftPaddle->rect->y += leftPaddleDY;
 		rightPaddle->rect->y += rightPaddleDY;
+
+		if (gameObjectCollision(ball, rightPaddle)) {
+			runGame = 0;
+		}
 		render(renderer, leftPaddle, rightPaddle, background, ball);
 	}
 
@@ -195,4 +201,19 @@ int collidesWithTop(GameObject *go) {
 
 int collidesWithBottom(int windowHeight, GameObject *go) {
 	return go->rect->y + go->rect->h == windowHeight-1;
+}
+
+int gameObjectCollision(GameObject *g1, GameObject *g2) {
+	int g1LeftEdge = g1->rect->x;
+	int g2LeftEdge = g2->rect->x;
+	int g1RightEdge = g1->rect->x + g1->rect->w;
+	int g2RightEdge = g2->rect->x + g2->rect->w;
+	int g1Top = g1->rect->y;
+	int g2Top = g2->rect->y;
+	int g1Bottom = g1->rect->y + g1->rect->h;
+	int g2Bottom = g2->rect->y + g2->rect->h;
+	return g1LeftEdge < g2RightEdge &&
+	       g1RightEdge > g2LeftEdge &&
+	       g1Top < g2Bottom &&
+	       g1Bottom > g2Top;
 }
