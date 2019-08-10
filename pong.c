@@ -13,6 +13,7 @@ struct GameObject {
 	SDL_Rect *rect;
 };
 
+int startGame(SDL_Window *window, SDL_Renderer *renderer, int windowWidth, int windowHeight);
 GameObject *initGameObject(int x, int y, int w, int h);
 void freeGameObject(GameObject *paddle);
 GameObject *setColor(GameObject *go, int r, int g, int b, int alpha);
@@ -22,6 +23,7 @@ int collidesWithBottom(int windowHeight, GameObject *go);
 int leftPaddleFrontCollision(GameObject *ball, GameObject *leftPaddle);
 int rightPaddleFrontCollision(GameObject *ball, GameObject *rightPaddle);
 int ballYSpeedChange(GameObject *ball, GameObject *paddle);
+int goalIsHit(int windowWidth, GameObject *ball);
 
 int main() {
 
@@ -38,6 +40,19 @@ int main() {
 	window = SDL_CreateWindow("Pong", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, windowWidth, windowHeight, SDL_WINDOW_OPENGL);
 	renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 
+	int runProgram = 1;
+
+	while(runProgram) {
+		runProgram = startGame(window, renderer, windowWidth, windowHeight);
+	}
+
+	SDL_DestroyWindow(window);
+	SDL_DestroyRenderer(renderer);
+	SDL_Quit();
+}
+
+int startGame(SDL_Window *window, SDL_Renderer *renderer, int windowWidth, int windowHeight) {
+	
 	GameObject *background = initGameObject(0, 0, windowWidth, windowHeight);
 	background = setColor(background, 147, 112, 219, 255);
 
@@ -76,6 +91,8 @@ int main() {
 	const Uint8 *keyboardState;
 
 	int runGame = 1;
+	int runProgram = 1;
+	int goalHit;
 
 	while (runGame) {
 	
@@ -103,6 +120,7 @@ int main() {
 		while (SDL_PollEvent(&sdlEvent)) {	
 			if (sdlEvent.type == SDL_QUIT) {
 				runGame = 0;
+				runProgram = 0;
 			}
 		}
 
@@ -138,7 +156,12 @@ int main() {
 		if (rightPaddleFrontCollision(ball, rightPaddle)) {
 			ballXSpeed = -ballXSpeed;
 			ballYSpeed += ballYSpeedChange(ball, leftPaddle);
-		}	
+		}
+
+		goalHit = goalIsHit(windowWidth, ball);
+		if (goalHit) {
+			runGame = 0;
+		}
 		
 		ball->rect->x += ballXSpeed;
 		ball->rect->y += ballYSpeed;
@@ -148,14 +171,21 @@ int main() {
 		render(renderer, leftPaddle, rightPaddle, background, ball);
 	}
 
+	switch(goalHit)  {
+		case 1:
+			printf("Right player won!\n");
+			break;
+		case 2:
+			printf("Left player won!\n");
+			break;
+	}
+
 	freeGameObject(background);
 	freeGameObject(leftPaddle);
 	freeGameObject(rightPaddle);
 	freeGameObject(ball);
 
-	SDL_DestroyWindow(window);
-	SDL_DestroyRenderer(renderer);
-	SDL_Quit();
+	return runProgram;
 }
 
 GameObject *initGameObject(int x, int y, int w, int h) {
@@ -242,4 +272,16 @@ int ballYSpeedChange(GameObject *ball, GameObject *paddle) {
 	} else {
 		return -1;
 	}
+}
+
+int goalIsHit(int windowWidth, GameObject *ball) {
+	if (ball->rect->x == 0) {
+		return 1;
+	}
+	
+	if (ball->rect->x + ball->rect->w == windowWidth) {
+		return 2;
+	}
+
+	return 0;
 }
