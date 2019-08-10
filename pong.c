@@ -44,12 +44,16 @@ int main() {
 			paddleWidth,
 			paddleHeight);
 	leftPaddle = setColor(leftPaddle, 255, 255, 255, 255);
+	
 	GameObject *rightPaddle = initGameObject(
 			windowWidth-sideOffset,
 			(windowHeight / 2) - (paddleHeight / 2),
 			paddleWidth,
 			paddleHeight);
 	rightPaddle = setColor(rightPaddle, 255, 255, 255, 255);
+	int leftPaddleDY;
+	int rightPaddleDY;
+
 	GameObject *ball = initGameObject(
 			(windowWidth / 2) - (ballSide / 2),
 			(windowHeight / 2) - (ballSide / 2),
@@ -59,15 +63,41 @@ int main() {
 	
 	SDL_Event sdlEvent;
 
+	const Uint8 *keyboardState;
+
 	int runGame = 1;
 
 	while (runGame) {
+	
+		leftPaddleDY = 0;
+		rightPaddleDY = 0;
+
+		keyboardState = SDL_GetKeyboardState(NULL);
+
+		if (keyboardState[SDL_SCANCODE_W]) {
+			leftPaddleDY = -1;
+		}
+
+		if (keyboardState[SDL_SCANCODE_S]) {
+			leftPaddleDY = 1;
+		}
+		
+		if (keyboardState[SDL_SCANCODE_I]) {
+			rightPaddleDY = -1;
+		}
+
+		if (keyboardState[SDL_SCANCODE_K]) {
+			rightPaddleDY = 1;
+		}
+
 		while (SDL_PollEvent(&sdlEvent)) {	
 			if (sdlEvent.type == SDL_QUIT) {
 				runGame = 0;
 			}
 		}
 
+		leftPaddle->rect->y += leftPaddleDY;
+		rightPaddle->rect->y += rightPaddleDY;
 		render(renderer, leftPaddle, rightPaddle, background, ball);
 	}
 
