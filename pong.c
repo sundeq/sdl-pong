@@ -14,7 +14,7 @@ struct GameObject {
 GameObject *initGameObject(int x, int y, int w, int h);
 void freeGameObject(GameObject *paddle);
 GameObject *setColor(GameObject *go, int r, int g, int b, int alpha);
-void render(SDL_Renderer *renderer, GameObject *leftPaddle, GameObject *rightPaddle, GameObject *background);
+void render(SDL_Renderer *renderer, GameObject *leftPaddle, GameObject *rightPaddle, GameObject *background, GameObject *ball);
 
 int main() {
 
@@ -36,11 +36,26 @@ int main() {
 
 	int paddleWidth = 10;
 	int paddleHeight = 150;
+	int ballSide = 10;
 	int sideOffset = 100;
-	GameObject *leftPaddle = initGameObject(sideOffset, (windowHeight / 2) - (paddleHeight / 2), paddleWidth, paddleHeight);
+	GameObject *leftPaddle = initGameObject(
+			sideOffset,
+			(windowHeight / 2) - (paddleHeight / 2),
+			paddleWidth,
+			paddleHeight);
 	leftPaddle = setColor(leftPaddle, 255, 255, 255, 255);
-	GameObject *rightPaddle = initGameObject(windowWidth-sideOffset, (windowHeight / 2) - (paddleHeight / 2), paddleWidth, paddleHeight);
+	GameObject *rightPaddle = initGameObject(
+			windowWidth-sideOffset,
+			(windowHeight / 2) - (paddleHeight / 2),
+			paddleWidth,
+			paddleHeight);
 	rightPaddle = setColor(rightPaddle, 255, 255, 255, 255);
+	GameObject *ball = initGameObject(
+			(windowWidth / 2) - (ballSide / 2),
+			(windowHeight / 2) - (ballSide / 2),
+			ballSide,
+			ballSide);
+	ball = setColor(ball, 255, 255, 255, 255);
 	
 	SDL_Event sdlEvent;
 
@@ -53,12 +68,13 @@ int main() {
 			}
 		}
 
-		render(renderer, leftPaddle, rightPaddle, background);
+		render(renderer, leftPaddle, rightPaddle, background, ball);
 	}
 
 	freeGameObject(background);
 	freeGameObject(leftPaddle);
 	freeGameObject(rightPaddle);
+	freeGameObject(ball);
 
 	SDL_DestroyWindow(window);
 	SDL_DestroyRenderer(renderer);
@@ -88,7 +104,7 @@ GameObject *setColor(GameObject *go, int  r, int g, int  b, int alpha) {
 	return go;
 }
 
-void render(SDL_Renderer *renderer, GameObject *leftPaddle, GameObject *rightPaddle, GameObject *background) {
+void render(SDL_Renderer *renderer, GameObject *leftPaddle, GameObject *rightPaddle, GameObject *background, GameObject *ball) {
 	
 	SDL_SetRenderDrawColor(renderer,
 			background->r,
@@ -110,6 +126,13 @@ void render(SDL_Renderer *renderer, GameObject *leftPaddle, GameObject *rightPad
 			rightPaddle->b,
 			rightPaddle->alpha);
 	SDL_RenderFillRect(renderer, rightPaddle->rect);
+	
+	SDL_SetRenderDrawColor(renderer,
+			ball->r,
+			ball->g,
+			ball->b,
+			ball->alpha);
+	SDL_RenderFillRect(renderer, ball->rect);
 
 	SDL_RenderPresent(renderer);
 }
